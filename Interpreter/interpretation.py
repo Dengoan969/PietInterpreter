@@ -40,32 +40,35 @@ def run_in_debug(pixel_data, state):
         raise RuntimeError("Start on black pixel")
     steps = 0
     is_run = False
-    break_point = None
+    break_points = set()
     while True:
         if state.is_final:
             print_program_state(state)
             print(f'Total steps: {steps}')
-            return state
+            break
         token = get_next_token(pixel_data, state)
         print()
         print(f'STEP {steps}')
-        print_next_token(token)
+        print_next_step(token, state)
         print_program_state(state)
-        if is_run and token[1] != break_point:
+        if is_run and token[1] not in break_points:
             state = make_step(state, token)
             steps += 1
         else:
-            if token[1] == break_point:
-                break_point = None
             command = input()
+            while command.split()[0] == 'breakpoint':
+                coords = command.split()[1:]
+                break_point = Position(int(coords[0]), int(coords[1]))
+                break_points.add(break_point)
+                command = input()
             if command == 'step':
+                is_run = False
                 state = make_step(state, token)
                 steps += 1
             elif command == 'run':
+                if token[1] in break_points:
+                    state = make_step(state, token)
                 is_run = True
-            elif command.split()[0] == 'breakpoint':
-                coords = command.split()[1:]
-                break_point = Position(int(coords[0]), int(coords[1]))
 
 
 def get_next_token(pixel_data, state):
@@ -74,9 +77,11 @@ def get_next_token(pixel_data, state):
     return next_tokens[state.direction]
 
 
-def print_next_token(next_token):
+def print_next_step(next_token, state):
+    next_position = tokenization.get_next_position(next_token[1],
+                                                   state.direction.dp)
     print(f'Command To Execute: {next_token[0]}\n'
-          f'Next Position: {next_token[1]}')
+          f'Next Position: {next_position}')
 
 
 def print_program_state(state):
