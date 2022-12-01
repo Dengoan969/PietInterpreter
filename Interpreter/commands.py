@@ -36,7 +36,7 @@ def execute_token(token, direction, stack):
         return execute_color_token(token, direction, stack)
     if isinstance(token, tokens.Terminate_token):
         return direction, stack
-    raise Exception
+    raise ValueError
 
 
 def execute_color_token(token, direction, stack):
@@ -82,7 +82,7 @@ def execute_color_token(token, direction, stack):
     elif token.token_type == "outC":
         return out_char_operator(direction, stack)
     else:
-        raise Exception
+        raise ValueError
 
 
 def noop_operator(direction, stack):
@@ -192,7 +192,6 @@ def switch_operator(direction, stack):
     direction = copy.deepcopy(direction)
     if len(stack) < 1:
         return direction, stack
-
     turn_count = abs(stack.pop()) % 2
     new_cc = (direction.cc + turn_count) % 2
     return Direction(direction.dp, new_cc), stack

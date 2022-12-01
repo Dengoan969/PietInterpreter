@@ -26,18 +26,18 @@ def make_step(state, token):
 def run(pixel_data, state):
     pixel_color = tokenization.get_pixel(pixel_data, state.position)
     if colors.is_black(pixel_color):
-        raise Exception("Start on black pixel")
+        raise RuntimeError("Start on black pixel")
     while True:
         token = get_next_token(pixel_data, state)
         state = make_step(state, token)
         if state.is_final:
-            break
+            return state
 
 
 def run_in_debug(pixel_data, state):
     pixel_color = tokenization.get_pixel(pixel_data, state.position)
     if colors.is_black(pixel_color):
-        raise Exception("Start on black pixel")
+        raise RuntimeError("Start on black pixel")
     steps = 0
     is_run = False
     break_point = None
@@ -45,7 +45,7 @@ def run_in_debug(pixel_data, state):
         if state.is_final:
             print_program_state(state)
             print(f'Total steps: {steps}')
-            break
+            return state
         token = get_next_token(pixel_data, state)
         print()
         print(f'STEP {steps}')
@@ -105,8 +105,9 @@ def get_current_direction(direction):
 
 
 def process_image(path):
-    with Image.open(path).convert('RGB') as img:
-        pixel_data = np.array(img)
+    with Image.open(path) as img:
+        image_data = img.convert('RGB')
+        pixel_data = np.array(image_data)
     return pixel_data
 
 
@@ -117,6 +118,5 @@ def interpret(path, is_debug):
     direction = Direction(0, 0)
     state = State(all_tokens, start, direction)
     if is_debug:
-        run_in_debug(pixel_data, state)
-    else:
-        run(pixel_data, state)
+        return run_in_debug(pixel_data, state)
+    return run(pixel_data, state)
